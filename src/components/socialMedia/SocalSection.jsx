@@ -152,14 +152,14 @@ export default function SocialMediaCards() {
 
   // ------------------------
   // Fetch API posts & smooth swap logic
-  // ------------------------
+  // -----------------------
   useEffect(() => {
     const controller = new AbortController();
-    const API_BASE = process.env.NEXT_PUBLIC_INSTAGRAM_API;
+    const API_BASE = process.env.NEXT_PUBLIC_API_BASE_URL || "https://api.tmgdubai.ae/api/v1/public";
     // If no API URL is configured, we rely on defaultPosts and do not fetch
     if (!API_BASE) return;
 
-    const endpoint = `${API_BASE}/api/instagram?limit=6`;
+    const endpoint = `${API_BASE}/instagram?limit=6`;
 
     // helper: map API post shape -> local post shape used by component
     const mapApiToPost = (apiItem) => {
