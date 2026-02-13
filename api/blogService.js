@@ -135,6 +135,23 @@ export const createSlug = (title) => {
 };
 
 /**
+ * Clean up a slug from potential unwanted suffixes like /index.txt or .html
+ * This prevents redirection loops on some hosting environments
+ * @param {string} slug - The slug to clean
+ * @returns {string} Cleaned slug
+ */
+export const cleanSlug = (slug) => {
+    if (!slug) return '';
+    return slug
+        .replace(/\/index\.txt$/, '')
+        .replace(/\/index\.html$/, '')
+        .replace(/\.txt$/, '')
+        .replace(/\.html$/, '')
+        .replace(/\/$/, '') // Remove trailing slash
+        .trim();
+};
+
+/**
  * Get related blogs based on category
  * @param {string} category - Blog category
  * @param {string} currentSlug - Current blog slug to exclude

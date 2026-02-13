@@ -3,7 +3,7 @@ import React, { useState, useMemo, useEffect } from "react";
 import { ChevronLeft, ChevronRight } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
 import { blogs as fallbackBlogs } from "@/data/BlogData";
-import { getAllBlogs, createSlug } from "@/../../api/blogService";
+import { getAllBlogs, createSlug, cleanSlug } from "@/../../api/blogService";
 import Link from "next/link";
 
 const Blog = () => {
@@ -223,7 +223,7 @@ const Blog = () => {
                     viewport={{ once: false, amount: 0.3 }}
                     className="group cursor-pointer h-full"
                   >
-                    <Link href={`/blogs/${blog.url || createSlug(blog.title)}`}>
+                    <Link href={`/blogs/${cleanSlug(blog.url || createSlug(blog.title))}`}>
                       <motion.div
                         whileHover={{ y: -6 }}
                         transition={{ duration: 0.3 }}

@@ -1,10 +1,11 @@
-import { getAllBlogs, createSlug, getBlogBySlug } from "@/../../api/blogService";
+import { getAllBlogs, createSlug, getBlogBySlug, cleanSlug } from "@/../../api/blogService";
 import { blogs as fallbackBlogs } from "@/data/BlogData";
 import BlogDetailClient from "./BlogDetailClient";
 
 // Generate metadata for each blog post
 export async function generateMetadata({ params }) {
-    const result = await getBlogBySlug(params.slug);
+    const { slug } = await params;
+    const result = await getBlogBySlug(slug);
 
     if (!result.success || !result.data) {
         return {
@@ -19,7 +20,7 @@ export async function generateMetadata({ params }) {
         description: blog.metaDescription || blog.excerpt || blog.description,
         keywords: blog.metaKeywords,
         alternates: {
-            canonical: blog.canonical || `https://tmgglobal.ae/blogs/${params.slug}`
+            canonical: blog.canonical || `https://tmgglobal.ae/blogs/${slug}`
         }
     };
 }
@@ -41,7 +42,7 @@ export async function generateStaticParams() {
         }
 
         return blogList.map((blog) => ({
-            slug: blog.url || createSlug(blog.title),
+            slug: cleanSlug(blog.url || createSlug(blog.title)),
         }));
     } catch (error) {
         console.error('❌ Error in generateStaticParams:', error);
@@ -56,7 +57,8 @@ export async function generateStaticParams() {
 export const dynamicParams = false;
 
 // Server Component - no "use client" directive
-export default function BlogDetailPage({ params }) {
-    return <BlogDetailClient slug={params.slug} />;
+export default async function BlogDetailPage({ params }) {
+    const { slug } = await params;
+    return <BlogDetailClient slug={slug} />;
 }
 

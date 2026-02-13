@@ -3,7 +3,7 @@ import React, { useState, useEffect } from "react";
 import { motion } from "framer-motion";
 import { Calendar, ArrowLeft, Tag } from "lucide-react";
 import Link from "next/link";
-import { getBlogBySlug, getRelatedBlogs, createSlug } from "@/../../api/blogService";
+import { getBlogBySlug, getRelatedBlogs, createSlug, cleanSlug } from "@/../../api/blogService";
 import BannerSection from "@/components/banner/Banner";
 import ConsultationModal from "@/components/common/ConsultationModal";
 import SmallBanner from "@/components/common/SmallBanner";
@@ -236,7 +236,7 @@ const BlogDetailClient = ({ slug }) => {
                                             {relatedBlogs.map((relatedBlog) => (
                                                 <Link
                                                     key={relatedBlog.id}
-                                                    href={`/blogs/${relatedBlog.url || createSlug(relatedBlog.title)}`}
+                                                    href={`/blogs/${cleanSlug(relatedBlog.url || createSlug(relatedBlog.title))}`}
                                                     className="block group"
                                                 >
                                                     <div className="flex gap-4 p-3 rounded-lg hover:bg-gray-50 transition-colors">
