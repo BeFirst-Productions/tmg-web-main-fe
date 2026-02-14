@@ -3,12 +3,13 @@ import React, { useState, useEffect } from "react";
 import { motion } from "framer-motion";
 import { Calendar, ArrowLeft, Tag } from "lucide-react";
 import Link from "next/link";
-import { getBlogBySlug, getRelatedBlogs, createSlug, cleanSlug } from "@/../../api/blogService";
+import { getBlogBySlug, getRelatedBlogs, createSlug, cleanSlug } from "@/../api/blogService";
 import BannerSection from "@/components/banner/Banner";
 import ConsultationModal from "@/components/common/ConsultationModal";
 import SmallBanner from "@/components/common/SmallBanner";
 import Footer from "@/components/footer/Footer";
 import { Navbar } from "@/components/navbar/Navbar";
+import Loader from "@/components/Loader";
 
 const BlogDetailClient = ({ slug }) => {
     const [blog, setBlog] = useState(null);
@@ -29,7 +30,7 @@ const BlogDetailClient = ({ slug }) => {
                 if (result.success && result.data) {
                     setBlog(result.data);
                     setDataSource(result.source);
-                    console.log(`Blog loaded from: ${result.source}`);
+                    // console.log(`Blog loaded from: ${result.source}`);
 
                     // Fetch related blogs
                     if (result.data.category) {
@@ -60,10 +61,7 @@ const BlogDetailClient = ({ slug }) => {
     if (isLoading) {
         return (
             <div className="min-h-screen flex items-center justify-center bg-white">
-                <div className="text-center">
-                    <div className="inline-block animate-spin rounded-full h-12 w-12 border-b-2 border-[#941D43]"></div>
-                    <p className="mt-4 text-gray-600">Loading blog...</p>
-                </div>
+<Loader/>
             </div>
         );
     }
@@ -97,7 +95,7 @@ const BlogDetailClient = ({ slug }) => {
                     breadcrumbs={[
                         { name: "Home", path: "/" },
                         { name: "Blogs", path: "/blogs" },
-                        { name: blog.title, path: `/blogs/${slug}` },
+                        { name: blog.title, path: `/blogs/${slug}/` },
                     ]}
                 />
 
@@ -147,9 +145,9 @@ const BlogDetailClient = ({ slug }) => {
 
                                     {/* Description/Excerpt Intro */}
                                     <div className="prose prose-lg max-w-none">
-                                        <p className="text-lg text-gray-700 leading-relaxed mb-6">
+                                        {/* <p className="text-lg text-gray-700 leading-relaxed mb-6">
                                             {blog.excerpt || blog.description}
-                                        </p>
+                                        </p> */}
 
                                         {/* Main Blog Content from 'description' or 'content' field */}
                                         {(blog.content || (blog.description && blog.description !== blog.excerpt)) && (
@@ -162,7 +160,7 @@ const BlogDetailClient = ({ slug }) => {
                                         )}
 
                                         {/* Placeholder content if no detailed content is available */}
-                                        {!blog.content && (
+                                        {/* {!blog.content && (
                                             <div className="space-y-4 text-gray-700">
                                                 <p>
                                                     This comprehensive guide will help you understand all aspects of{" "}
@@ -179,7 +177,7 @@ const BlogDetailClient = ({ slug }) => {
                                                     through the process.
                                                 </p>
                                             </div>
-                                        )}
+                                        )} */}
                                     </div>
 
                                     {/* CTA Section */}
@@ -235,8 +233,8 @@ const BlogDetailClient = ({ slug }) => {
                                         <div className="space-y-4">
                                             {relatedBlogs.map((relatedBlog) => (
                                                 <Link
-                                                    key={relatedBlog.id}
-                                                    href={`/blogs/${cleanSlug(relatedBlog.url || createSlug(relatedBlog.title))}`}
+                                                    key={relatedBlog._id || relatedBlog.id}
+                                                    href={`/blogs/${cleanSlug(relatedBlog.url || createSlug(relatedBlog.title))}/`}
                                                     className="block group"
                                                 >
                                                     <div className="flex gap-4 p-3 rounded-lg hover:bg-gray-50 transition-colors">

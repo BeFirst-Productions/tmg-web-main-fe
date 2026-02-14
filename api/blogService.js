@@ -12,13 +12,13 @@ import { blogs as fallbackBlogs } from '@/data/BlogData';
  */
 export const getAllBlogs = async () => {
     try {
-        console.log('Fetching blogs from API...');
+        // console.log('Fetching blogs from API...');
         const response = await api.get('/blogs/get-blogs');
-        console.log('API Response:', response);
+        // console.log('API Response:', response);
 
         // Check if response has data
         if (response.data && Array.isArray(response.data)) {
-            console.log('✅ API returned array directly:', response.data.length, 'blogs');
+            // console.log('✅ API returned array directly:', response.data.length, 'blogs');
             return {
                 success: true,
                 data: response.data,
@@ -28,7 +28,7 @@ export const getAllBlogs = async () => {
 
         // If response structure is different, try to extract data
         if (response.data?.data && Array.isArray(response.data.data)) {
-            console.log('✅ API returned wrapped data:', response.data.data.length, 'blogs');
+            // console.log('✅ API returned wrapped data:', response.data.data.length, 'blogs');
             return {
                 success: true,
                 data: response.data.data,

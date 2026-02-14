@@ -3,13 +3,13 @@ import React, { useState, useMemo, useEffect } from "react";
 import { ChevronLeft, ChevronRight } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
 import { blogs as fallbackBlogs } from "@/data/BlogData";
-import { getAllBlogs, createSlug, cleanSlug } from "@/../../api/blogService";
+import { getAllBlogs, createSlug, cleanSlug } from "@/../api/blogService";
 import Link from "next/link";
 
 const Blog = () => {
   const [activeCategory, setActiveCategory] = useState("all");
   const [currentPage, setCurrentPage] = useState(1);
-  const [blogs, setBlogs] = useState([]); // Start with empty array
+  const [blogs, setBlogs] = useState([]);
   const [isLoading, setIsLoading] = useState(true);
   const [dataSource, setDataSource] = useState("loading");
   const itemsPerPage = 12;
@@ -31,7 +31,7 @@ const Blog = () => {
         if (result.success && result.data && result.data.length > 0) {
           setBlogs(result.data);
           setDataSource(result.source);
-          console.log(`Blogs loaded from: ${result.source}`, result.data);
+          // console.log(`Blogs loaded from: ${result.source}`, result.data);
         } else {
           // If API returns empty or invalid data, use fallback
           console.warn('API returned no data, using fallback');
@@ -223,7 +223,7 @@ const Blog = () => {
                     viewport={{ once: false, amount: 0.3 }}
                     className="group cursor-pointer h-full"
                   >
-                    <Link href={`/blogs/${cleanSlug(blog.url || createSlug(blog.title))}`}>
+                    <Link href={`/blogs/${cleanSlug(blog.url || createSlug(blog.title))}/`}>
                       <motion.div
                         whileHover={{ y: -6 }}
                         transition={{ duration: 0.3 }}

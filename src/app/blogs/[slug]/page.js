@@ -1,4 +1,4 @@
-import { getAllBlogs, createSlug, getBlogBySlug, cleanSlug } from "@/../../api/blogService";
+import { getAllBlogs, createSlug, getBlogBySlug, cleanSlug } from "@/../api/blogService";
 import { blogs as fallbackBlogs } from "@/data/BlogData";
 import BlogDetailClient from "./BlogDetailClient";
 
@@ -20,7 +20,7 @@ export async function generateMetadata({ params }) {
         description: blog.metaDescription || blog.excerpt || blog.description,
         keywords: blog.metaKeywords,
         alternates: {
-            canonical: blog.canonical || `https://tmgglobal.ae/blogs/${slug}`
+            canonical: blog.canonical || `https://tmgdubai.ae/blogs/${slug}/`
         }
     };
 }
@@ -29,7 +29,7 @@ export async function generateMetadata({ params }) {
 // ... (rest of the functions)
 export async function generateStaticParams() {
     try {
-        console.log('Generating static params for blogs...');
+        // console.log('Generating static params for blogs...');
         const result = await getAllBlogs();
 
         let blogList = [];
