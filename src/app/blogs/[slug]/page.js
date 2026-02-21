@@ -29,8 +29,8 @@ export async function generateMetadata({ params }) {
 // ... (rest of the functions)
 export async function generateStaticParams() {
     try {
-        // console.log('Generating static params for blogs...');
-        const result = await getAllBlogs();
+        // Fetch all blogs for static generation (limit to 1000 to get everything)
+        const result = await getAllBlogs(1, 1000);
 
         let blogList = [];
         if (result.success && result.data && result.data.length > 0) {

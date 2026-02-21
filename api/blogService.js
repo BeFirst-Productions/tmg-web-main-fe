@@ -7,31 +7,52 @@ import { blogs as fallbackBlogs } from '@/data/BlogData';
  */
 
 /**
- * Fetch all blogs from backend
- * @returns {Promise<Array>} Array of blog objects
+ * Fetch blogs from backend with pagination and category filtering
+ * @param {number} page - Page number
+ * @param {number} limit - Items per page
+ * @param {string} category - Category to filter by
+ * @returns {Promise<Object>} Object containing blog data and pagination info
  */
-export const getAllBlogs = async () => {
+export const getAllBlogs = async (page = 1, limit = 8, category = 'all') => {
     try {
-        // console.log('Fetching blogs from API...');
-        const response = await api.get('/blogs/get-blogs');
-        // console.log('API Response:', response);
+        let url = `/blogs/get-blogs?page=${page}&limit=${limit}`;
+        if (category && category !== 'all') {
+            url += `&category=${category}`;
+        }
+        const response = await api.get(url);
 
-        // Check if response has data
-        if (response.data && Array.isArray(response.data)) {
-            // console.log('✅ API returned array directly:', response.data.length, 'blogs');
+        // Handle the new response structure from the controller
+        if (response.data && response.data.success) {
             return {
                 success: true,
-                data: response.data,
+                data: response.data.data,
+                total: response.data.total,
+                totalPages: response.data.totalPages,
+                currentPage: response.data.currentPage,
                 source: 'backend'
             };
         }
 
-        // If response structure is different, try to extract data
+        // Fallback for direct array response
+        if (Array.isArray(response.data)) {
+            return {
+                success: true,
+                data: response.data,
+                total: response.data.length,
+                totalPages: 1,
+                currentPage: 1,
+                source: 'backend'
+            };
+        }
+
+        // Fallback for wrapped data without success flag
         if (response.data?.data && Array.isArray(response.data.data)) {
-            // console.log('✅ API returned wrapped data:', response.data.data.length, 'blogs');
             return {
                 success: true,
                 data: response.data.data,
+                total: response.data.total || response.data.data.length,
+                totalPages: response.data.totalPages || 1,
+                currentPage: response.data.currentPage || 1,
                 source: 'backend'
             };
         }
@@ -41,14 +62,19 @@ export const getAllBlogs = async () => {
         return {
             success: true,
             data: fallbackBlogs,
+            total: fallbackBlogs.length,
+            totalPages: Math.ceil(fallbackBlogs.length / limit),
+            currentPage: 1,
             source: 'fallback'
         };
     } catch (error) {
         console.error('❌ Error fetching blogs from backend:', error.message);
-        // Return fallback data on error
         return {
             success: true,
             data: fallbackBlogs,
+            total: fallbackBlogs.length,
+            totalPages: Math.ceil(fallbackBlogs.length / limit),
+            currentPage: 1,
             source: 'fallback',
             error: error.message
         };
@@ -142,13 +168,30 @@ export const createSlug = (title) => {
  */
 export const cleanSlug = (slug) => {
     if (!slug) return '';
-    return slug
-        .replace(/\/index\.txt$/, '')
-        .replace(/\/index\.html$/, '')
-        .replace(/\.txt$/, '')
-        .replace(/\.html$/, '')
-        .replace(/\/$/, '') // Remove trailing slash
-        .trim();
+
+    let cleaned = String(slug).trim();
+
+    // Remove unwanted suffixes recursively
+    const patterns = [
+        /\/index\.txt$/,
+        /\/index\.html$/,
+        /\.txt$/,
+        /\.html$/,
+        /\/$/           // Remove trailing slash
+    ];
+
+    let changed = true;
+    while (changed) {
+        changed = false;
+        for (const pattern of patterns) {
+            if (pattern.test(cleaned)) {
+                cleaned = cleaned.replace(pattern, '');
+                changed = true;
+            }
+        }
+    }
+
+    return cleaned || '';
 };
 
 /**

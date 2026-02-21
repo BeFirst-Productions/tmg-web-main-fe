@@ -12,7 +12,7 @@ const Blog = () => {
   const [blogs, setBlogs] = useState([]);
   const [isLoading, setIsLoading] = useState(true);
   const [dataSource, setDataSource] = useState("loading");
-  const itemsPerPage = 12;
+  const itemsPerPage = 8;
 
   const categories = [
     { label: "All", value: "all" },
@@ -22,25 +22,23 @@ const Blog = () => {
     { label: "Legal, Compliance &\nFinance", value: "legal-compliance" },
   ];
 
-  // Fetch blogs from backend on component mount
+  // Fetch all blogs when the component mounts
   useEffect(() => {
     const fetchBlogs = async () => {
       setIsLoading(true);
       try {
-        const result = await getAllBlogs();
-        if (result.success && result.data && result.data.length > 0) {
+        // Fetch a large number (1000) once to allow correct category filtering on client
+        const result = await getAllBlogs(1, 1000, "all");
+
+        if (result.success && result.data) {
           setBlogs(result.data);
           setDataSource(result.source);
-          // console.log(`Blogs loaded from: ${result.source}`, result.data);
         } else {
-          // If API returns empty or invalid data, use fallback
-          console.warn('API returned no data, using fallback');
           setBlogs(fallbackBlogs);
           setDataSource('fallback');
         }
       } catch (error) {
         console.error('Error in fetchBlogs:', error);
-        // Use fallback data on error
         setBlogs(fallbackBlogs);
         setDataSource('fallback');
       } finally {
@@ -49,15 +47,10 @@ const Blog = () => {
     };
 
     fetchBlogs();
-  }, []);
+  }, []); // Only run on mount
 
-  const filteredBlogs = useMemo(() => {
-    if (activeCategory === "all") {
-      return blogs;
-    }
-
-    // The blog.category from backend should match the value (e.g., 'business-setup')
-    // We also check for display names as a fallback for older data or local data
+  const { paginatedBlogs, totalPages, totalInActiveCategory } = useMemo(() => {
+    // 1. Filter by category
     const categoryMapping = {
       "business-setup": "Business Setup & Company Formation",
       "visa-residency": "Visa & Residency",
@@ -65,20 +58,22 @@ const Blog = () => {
       "legal-compliance": "Legal, Compliance & Financial Services",
     };
 
-    return blogs.filter((blog) => {
-      return (
-        blog.category === activeCategory ||
-        blog.category === categoryMapping[activeCategory]
-      );
-    });
-  }, [activeCategory, blogs]);
+    const filtered = activeCategory === "all"
+      ? blogs
+      : blogs.filter(blog => blog.category === activeCategory || blog.category === categoryMapping[activeCategory]);
 
-  const totalPages = Math.ceil(filteredBlogs.length / itemsPerPage);
-  const startIndex = (currentPage - 1) * itemsPerPage;
-  const paginatedBlogs = filteredBlogs.slice(
-    startIndex,
-    startIndex + itemsPerPage
-  );
+    // 2. Calculate pagination
+    const total = filtered.length;
+    const pages = Math.ceil(total / itemsPerPage);
+    const start = (currentPage - 1) * itemsPerPage;
+    const paginated = filtered.slice(start, start + itemsPerPage);
+
+    return {
+      paginatedBlogs: paginated,
+      totalPages: pages,
+      totalInActiveCategory: total
+    };
+  }, [activeCategory, blogs, currentPage]);
 
   const handleCategoryChange = (categoryValue) => {
     setActiveCategory(categoryValue);
@@ -274,8 +269,8 @@ const Blog = () => {
           )}
         </AnimatePresence>
 
-        {/* Pagination */}
-        {totalPages > 1 && (
+        {/* Pagination - Hide if active category has 8 or fewer blogs */}
+        {totalInActiveCategory > 8 && (
           <motion.div
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
