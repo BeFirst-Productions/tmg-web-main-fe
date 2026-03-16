@@ -1,22 +1,55 @@
 "use client";
 
-import { useState, useMemo } from "react";
+import { useState, useMemo, useEffect } from "react";
 import { ChevronLeft, ChevronRight } from "lucide-react";
-import { galleryImages } from "@/data/GalleryData";
+import { galleryImages as fallbackImages } from "@/data/GalleryData";
+import { getAllGalleryImages } from "@/../api/galleryService";
 import { Container } from "../layout/Container";
 
 export default function Gallery() {
   const [currentPage, setCurrentPage] = useState(0);
   const [selectedImage, setSelectedImage] = useState(null);
+  const [images, setImages] = useState([]);
+  const [isLoading, setIsLoading] = useState(true);
+
+  useEffect(() => {
+    const fetchImages = async () => {
+      setIsLoading(true);
+      try {
+        const result = await getAllGalleryImages();
+        if (result.success) {
+          if (result.data && result.data.length > 0) {
+            const formattedImages = result.data.map((item, idx) => ({
+              id: item.id || item._id || idx + 1,
+              src: item.src || item.image || item.imageUrl || item.url || (typeof item === 'string' ? item : fallbackImages[idx]?.src || fallbackImages[0].src),
+              alt: item.alt || item.title || `Gallery image ${idx + 1}`
+            }));
+            setImages(formattedImages);
+          } else {
+            setImages([]);
+          }
+        } else {
+          setImages(fallbackImages);
+        }
+      } catch (error) {
+        console.error("Error fetching gallery source:", error);
+        setImages(fallbackImages);
+      } finally {
+        setIsLoading(false);
+      }
+    };
+
+    fetchImages();
+  }, []);
 
   const ITEMS_PER_PAGE = 16;
-  const totalPages = Math.ceil(galleryImages.length / ITEMS_PER_PAGE);
+  const totalPages = Math.max(1, Math.ceil(images.length / ITEMS_PER_PAGE));
 
   // Get current page items
   const currentItems = useMemo(() => {
     const startIndex = currentPage * ITEMS_PER_PAGE;
-    return galleryImages.slice(startIndex, startIndex + ITEMS_PER_PAGE);
-  }, [currentPage]);
+    return images.slice(startIndex, startIndex + ITEMS_PER_PAGE);
+  }, [currentPage, images]);
 
   const handleNextPage = () => {
     if (currentPage < totalPages - 1) {
@@ -47,16 +80,26 @@ export default function Gallery() {
           </div>
 
           {/* Gallery Grid */}
-          <div className="flex justify-center mb-8 sm:mb-12">
-            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-3 sm:gap-4 md:gap-5 lg:gap-6 w-full justify-items-center">
-              {currentItems.map((image, index) => (
-                <GalleryCard
-                  key={`${currentPage}-${image.id}`}
-                  image={image}
-                  onSelect={setSelectedImage}
-                />
-              ))}
-            </div>
+          <div className="flex justify-center mb-8 sm:mb-12 min-h-[400px]">
+            {isLoading ? (
+              <div className="flex justify-center items-center w-full h-full">
+                <div className="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-[#941D43]"></div>
+              </div>
+            ) : images.length > 0 ? (
+              <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-3 sm:gap-4 md:gap-5 lg:gap-6 w-full justify-items-center">
+                {currentItems.map((image, index) => (
+                  <GalleryCard
+                    key={`${currentPage}-${image.id}`}
+                    image={image}
+                    onSelect={setSelectedImage}
+                  />
+                ))}
+              </div>
+            ) : (
+              <div className="text-center text-gray-500 py-10 w-full">
+                No images available in the gallery.
+              </div>
+            )}
           </div>
 
           {/* Pagination */}
@@ -88,8 +131,8 @@ export default function Gallery() {
                         window.scrollTo({ top: 0, behavior: "smooth" });
                       }}
                       className={`w-8 sm:w-8 md:w-10 h-8 sm:h-8 md:h-10 rounded-full font-bold text-base sm:text-lg md:text-xl transition-all duration-300 flex items-center justify-center flex-shrink-0 ${isActive
-                          ? "bg-amber-600 text-white shadow-lg"
-                          : "bg-white border-2 border-gray-300 text-gray-700 hover:border-gray-400 hover:shadow-md"
+                        ? "bg-amber-600 text-white shadow-lg"
+                        : "bg-white border-2 border-gray-300 text-gray-700 hover:border-gray-400 hover:shadow-md"
                         }`}
                     >
                       {pageNum}
@@ -192,10 +235,7 @@ function GalleryCard({ image, onSelect }) {
           </div>
         </div>
 
-        {/* Image Number */}
-        <div className="absolute bottom-3 sm:bottom-4 left-3 sm:left-4 text-white font-semibold text-base sm:text-lg bg-black/50 px-2 py-1 rounded opacity-0 group-hover:opacity-100 transition-opacity duration-300">
-          #{image.id}
-        </div>
+
       </div>
 
       {/* Border Highlight on Hover */}

@@ -469,6 +469,7 @@ import { ArrowUpRight } from "lucide-react";
 import Link from "next/link";
 import { packageData } from "../../data/PackageData";
 import { useRouter } from "next/navigation";
+import { getAllPackages } from "@/../api/packageService";
 
 export const BusinessSetupPackages = () => {
   const router = useRouter();
@@ -478,8 +479,96 @@ export const BusinessSetupPackages = () => {
   const [currentIndex, setCurrentIndex] = useState(0);
   const [fade, setFade] = useState(true);
   const [isPaused, setIsPaused] = useState(false);
+  const [cards, setCards] = useState([]);
+  const [isLoading, setIsLoading] = useState(true);
   const currentOptions = packageData[activeTab];
   const scrollRef = React.useRef(null);
+
+  const fallbackCards = [
+    {
+      name: "MEYDAN",
+      prices: {
+        withVisa: { current: 20595, old: 21095 },
+        withoutVisa: { current: 12500, old: 13500 },
+      },
+      image: "/assets/images/packages/meydan-package.jpg",
+    },
+    {
+      name: "IFZA",
+      prices: {
+        withVisa: { current: 23495, old: 23995 },
+        withoutVisa: { current: 12400, old: 12000 },
+      },
+      image: "/assets/images/packages/ifza-freezone-package.jpg",
+    },
+    {
+      name: "SPC FREEZONE",
+      prices: {
+        withVisa: { current: 14490, old: 4990 },
+        withoutVisa: { current: 6375, old: 6875 },
+      },
+      image: "/assets/images/packages/spc-freezone-package.jpg",
+    },
+    {
+      name: "SRTIP PACKAGES",
+      prices: {
+        withVisa: { current: 12490, old: 13990 },
+        withoutVisa: { current: 5000, old: 5500 },
+      },
+      image: "/assets/images/packages/SRTIP-freezone-package.jpg",
+    },
+    {
+      name: "RAKEZ",
+      prices: {
+        withVisa: { current: 12010, old: 14010 },
+        withoutVisa: { current: 5510, old: 6010 },
+      },
+      image: "/assets/images/packages/rakez-freezone-package.jpg",
+    },
+    {
+      name: "SHAMS FREEZONE",
+      prices: {
+        withVisa: { current: 12600, old: 13120 },
+        withoutVisa: { current: 5750, old: 6885 },
+      },
+      image: "/assets/images/packages/shams-freezone-package.jpg",
+    },
+  ];
+
+  useEffect(() => {
+    const fetchPackages = async () => {
+      try {
+        const result = await getAllPackages();
+        if (result.success && result.data && result.data.length > 0) {
+          // Format API data to match the backend model schema:
+          // title -> name, withVisaPrice2/1, WithoutVisaPrice2/1
+          const formattedData = result.data.map(item => ({
+            name: item.title || "Package",
+            prices: {
+              withVisa: { 
+                current: item.withVisaPrice1 || 0, 
+                old: item.withVisaPrice2 || 0 
+              },
+              withoutVisa: { 
+                current: item.WithoutVisaPrice1 || 0, 
+                old: item.WithoutVisaPrice2 || 0 
+              },
+            },
+            image: item.image || "/assets/images/packages/default-package.jpg",
+          }));
+          setCards(formattedData);
+        } else {
+          setCards(fallbackCards);
+        }
+      } catch (error) {
+        console.error("Error fetching packages:", error);
+        setCards(fallbackCards);
+      } finally {
+        setIsLoading(false);
+      }
+    };
+    fetchPackages();
+  }, []);
 
   // Scroll Sync: Update currentIndex based on scroll position (Sticky Strategy)
   const handleScroll = () => {
@@ -487,12 +576,12 @@ export const BusinessSetupPackages = () => {
       const container = scrollRef.current;
       const containerRect = container.getBoundingClientRect();
 
-      const cards = container.querySelectorAll('[data-card-index]');
+      const cardElements = container.querySelectorAll('[data-card-index]');
       let maxOverlap = 0;
       let mostVisibleIndex = currentIndex;
       let fullyVisibleIndex = -1;
 
-      cards.forEach((card, index) => {
+      cardElements.forEach((card, index) => {
         const cardRect = card.getBoundingClientRect();
 
         // Calculate vertical overlap
@@ -556,58 +645,10 @@ export const BusinessSetupPackages = () => {
     router.push(link);
   };
 
-  const cards = [
-    {
-      name: "MEYDAN",
-      prices: {
-        withVisa: { current: 20595, old: 21095 },
-        withoutVisa: { current: 12500, old: 13500 },
-      },
-      image: "/assets/images/packages/meydan-package.jpg",
-    },
-    {
-      name: "IFZA",
-      prices: {
-        withVisa: { current: 23495, old: 23995 },
-        withoutVisa: { current: 12400, old: 12000 },
-      },
-      image: "/assets/images/packages/ifza-freezone-package.jpg",
-    },
-    {
-      name: "SPC FREEZONE",
-      prices: {
-        withVisa: { current: 14490, old: 4990 },
-        withoutVisa: { current: 6375, old: 6875 },
-      },
-      image: "/assets/images/packages/spc-freezone-package.jpg",
-    },
-    {
-      name: "SRTIP PACKAGES",
-      prices: {
-        withVisa: { current: 12490, old: 13990 },
-        withoutVisa: { current: 5000, old: 5500 },
-      },
-      image: "/assets/images/packages/SRTIP-freezone-package.jpg",
-    },
-    {
-      name: "RAKEZ",
-      prices: {
-        withVisa: { current: 12010, old: 14010 },
-        withoutVisa: { current: 5510, old: 6010 },
-      },
-      image: "/assets/images/packages/rakez-freezone-package.jpg",
-    },
-    {
-      name: "SHAMS FREEZONE",
-      prices: {
-        withVisa: { current: 12600, old: 13120 },
-        withoutVisa: { current: 5750, old: 6885 },
-      },
-      image: "/assets/images/packages/shams-freezone-package.jpg",
-    },
-  ];
+
 
   useEffect(() => {
+    if (cards.length === 0) return;
     const interval = setInterval(() => {
       if (!isPaused) {
         setFade(false);
@@ -792,7 +833,11 @@ export const BusinessSetupPackages = () => {
 
                         <div className="flex items-center bg-white p-4 h-14 rounded-xl justify-between">
                           <span className="text-black text-lg md:text-xl font-semibold">
-                            {option.rate}
+                            AED {
+                              cards.length > 0 && cards[index]
+                                ? (withVisa ? cards[index].prices.withVisa.current : cards[index].prices.withoutVisa.current).toLocaleString()
+                                : option.rate
+                            }
                           </span>
 
                           <Link href={categoryLinks[activeTab] || "/"}>
@@ -839,29 +884,33 @@ export const BusinessSetupPackages = () => {
               >
                 {/* Package Image with Fade Transition */}
                 <div className="relative w-full h-56 overflow-hidden">
-                  <motion.img
-                    key={cards[currentIndex].image}
-                    src={cards[currentIndex].image}
-                    alt={cards[currentIndex].name}
-                    initial={{ opacity: 0 }}
-                    animate={{ opacity: fade ? 1 : 0 }}
-                    transition={{ duration: 0.7 }}
-                    className="w-full h-full object-cover"
-                  />
+                  {cards.length > 0 && cards[currentIndex] && (
+                    <motion.img
+                      key={cards[currentIndex].image}
+                      src={cards[currentIndex].image}
+                      alt={cards[currentIndex].name}
+                      initial={{ opacity: 0 }}
+                      animate={{ opacity: fade ? 1 : 0 }}
+                      transition={{ duration: 0.7 }}
+                      className="w-full h-full object-cover"
+                    />
+                  )}
                 </div>
 
                 {/* Content Section */}
                 <div className="bg-white px-6 py-8 flex flex-col items-center text-center space-y-4">
                   {/* Title */}
-                  <motion.h3
-                    key={cards[currentIndex].name}
-                    initial={{ opacity: 0, y: 10 }}
-                    animate={{ opacity: 1, y: 0 }}
-                    transition={{ duration: 0.4 }}
-                    className="text-2xl md:text-3xl font-bold text-[#8E1A3D]"
-                  >
-                    {cards[currentIndex].name}
-                  </motion.h3>
+                  {cards.length > 0 && cards[currentIndex] && (
+                    <motion.h3
+                      key={cards[currentIndex].name}
+                      initial={{ opacity: 0, y: 10 }}
+                      animate={{ opacity: 1, y: 0 }}
+                      transition={{ duration: 0.4 }}
+                      className="text-2xl md:text-3xl font-bold text-[#8E1A3D]"
+                    >
+                      {cards[currentIndex].name}
+                    </motion.h3>
+                  )}
 
                   {/* Toggle Switch for Visa Option */}
                   <div className="flex items-center justify-center gap-3">
@@ -896,41 +945,45 @@ export const BusinessSetupPackages = () => {
 
                   {/* Price Section with Animation */}
                   <div className="flex flex-col items-center space-y-1 pt-2">
-                    <motion.span
-                      key={`${cards[currentIndex].name}-${withVisa ? "with" : "without"
-                        }`}
-                      initial={{ opacity: 0, y: 10 }}
-                      animate={{ opacity: 1, y: 0 }}
-                      transition={{ duration: 0.4 }}
-                      className="text-3xl md:text-4xl font-extrabold text-[#8E1A3D]"
-                    >
-                      AED{" "}
-                      {withVisa
-                        ? cards[
-                          currentIndex
-                        ].prices.withVisa.current.toLocaleString()
-                        : cards[
-                          currentIndex
-                        ].prices.withoutVisa.current.toLocaleString()}
-                    </motion.span>
+                    {cards.length > 0 && cards[currentIndex] && (
+                      <>
+                        <motion.span
+                          key={`${cards[currentIndex].name}-${withVisa ? "with" : "without"
+                            }`}
+                          initial={{ opacity: 0, y: 10 }}
+                          animate={{ opacity: 1, y: 0 }}
+                          transition={{ duration: 0.4 }}
+                          className="text-3xl md:text-4xl font-extrabold text-[#8E1A3D]"
+                        >
+                          AED{" "}
+                          {withVisa
+                            ? cards[
+                              currentIndex
+                            ].prices.withVisa.current.toLocaleString()
+                            : cards[
+                              currentIndex
+                            ].prices.withoutVisa.current.toLocaleString()}
+                        </motion.span>
 
-                    <motion.span
-                      key={`${cards[currentIndex].name}-old-${withVisa ? "with" : "without"
-                        }`}
-                      initial={{ opacity: 0 }}
-                      animate={{ opacity: 1 }}
-                      transition={{ duration: 0.4, delay: 0.1 }}
-                      className="text-gray-400 line-through text-sm md:text-base"
-                    >
-                      AED{" "}
-                      {withVisa
-                        ? cards[
-                          currentIndex
-                        ].prices.withVisa.old.toLocaleString()
-                        : cards[
-                          currentIndex
-                        ].prices.withoutVisa.old.toLocaleString()}
-                    </motion.span>
+                        <motion.span
+                          key={`${cards[currentIndex].name}-old-${withVisa ? "with" : "without"
+                            }`}
+                          initial={{ opacity: 0 }}
+                          animate={{ opacity: 1 }}
+                          transition={{ duration: 0.4, delay: 0.1 }}
+                          className="text-gray-400 line-through text-sm md:text-base"
+                        >
+                          AED{" "}
+                          {withVisa
+                            ? cards[
+                              currentIndex
+                            ].prices.withVisa.old.toLocaleString()
+                            : cards[
+                              currentIndex
+                            ].prices.withoutVisa.old.toLocaleString()}
+                        </motion.span>
+                      </>
+                    )}
                   </div>
                 </div>
 
